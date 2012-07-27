@@ -19,6 +19,8 @@
 		DE0D695F15A321A60040318C /* MyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = DE0D695D15A321A60040318C /* MyViewController.xib */; };
 		DE0D6C2915A707530040318C /* OperationsRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0D6C2615A707530040318C /* OperationsRunner.m */; };
 		DE0D6C2A15A707530040318C /* WebFetcher.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0D6C2815A707530040318C /* WebFetcher.m */; };
+		DE2519EF15AF70DD0073D58D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = DE2519EE15AF70DD0073D58D /* README.md */; };
+		DE251A0915AF73940073D58D /* ConcurrentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DE251A0815AF73940073D58D /* ConcurrentOperation.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +45,9 @@
 		DE0D6C2715A707530040318C /* WebFetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebFetcher.h; sourceTree = "<group>"; };
 		DE0D6C2815A707530040318C /* WebFetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebFetcher.m; sourceTree = "<group>"; };
 		DE0D6C2B15A707940040318C /* OperationsRunnerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OperationsRunnerProtocol.h; sourceTree = "<group>"; };
+		DE2519EE15AF70DD0073D58D /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		DE251A0715AF73940073D58D /* ConcurrentOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConcurrentOperation.h; sourceTree = "<group>"; };
+		DE251A0815AF73940073D58D /* ConcurrentOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConcurrentOperation.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +67,7 @@
 		DE0D692F15A320DC0040318C = {
 			isa = PBXGroup;
 			children = (
+				DE2519EE15AF70DD0073D58D /* README.md */,
 				DE0D694415A320DC0040318C /* NSOperation-WebFetches-MadeEasy */,
 				DE0D693D15A320DC0040318C /* Frameworks */,
 				DE0D693B15A320DC0040318C /* Products */,
@@ -117,6 +123,8 @@
 		DE0D6C2315A707270040318C /* WhatYouNeed */ = {
 			isa = PBXGroup;
 			children = (
+				DE251A0715AF73940073D58D /* ConcurrentOperation.h */,
+				DE251A0815AF73940073D58D /* ConcurrentOperation.m */,
 				DE0D6C2B15A707940040318C /* OperationsRunnerProtocol.h */,
 				DE0D6C2515A707530040318C /* OperationsRunner.h */,
 				DE0D6C2615A707530040318C /* OperationsRunner.m */,
@@ -179,6 +187,7 @@
 				DE0D694915A320DC0040318C /* InfoPlist.strings in Resources */,
 				DE0D695515A320DC0040318C /* ViewController.xib in Resources */,
 				DE0D695F15A321A60040318C /* MyViewController.xib in Resources */,
+				DE2519EF15AF70DD0073D58D /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +204,7 @@
 				DE0D695E15A321A60040318C /* MyViewController.m in Sources */,
 				DE0D6C2915A707530040318C /* OperationsRunner.m in Sources */,
 				DE0D6C2A15A707530040318C /* WebFetcher.m in Sources */,
+				DE251A0915AF73940073D58D /* ConcurrentOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,7 +250,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -258,7 +268,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;

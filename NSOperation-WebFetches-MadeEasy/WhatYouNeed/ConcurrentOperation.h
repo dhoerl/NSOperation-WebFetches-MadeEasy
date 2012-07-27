@@ -21,32 +21,19 @@
 // THE SOFTWARE.
 //
 
-typedef NSRange (*htmlProcessor)(NSData *arg, const char *classMatch);
-
-#import "ConcurrentOperation.h"
-
-@interface WebFetcher : ConcurrentOperation
-@property (nonatomic, copy) NSString *urlStr;
-@property (nonatomic, strong) NSError *error;
-@property (nonatomic, copy) NSString *errorMessage;
-@property (nonatomic, copy) NSString *runMessage;	// debugging
-@property (nonatomic, strong, readonly) NSURLConnection *connection;
-@property (nonatomic, strong, readonly) NSMutableData *webData;
-@property (nonatomic, strong) NSMutableURLRequest *request;	// superclass might want to fiddle with it
-@property (nonatomic, assign) NSUInteger htmlStatus;
-#ifndef NDEBUG
-@property (nonatomic, assign) BOOL forceFailure;	// testing
-#endif
+@interface ConcurrentOperation : NSOperation
+@property (nonatomic, strong, readonly) NSThread *thread;	// maybe you want to message it
 
 @end
 
-@interface WebFetcher (NSURLConnectionDelegate) <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+// These are here for subclassers and not intended for general use
+@interface ConcurrentOperation (ForSubClassesInternalUse)
+
+- (BOOL)setup;		// get the app started, YES->continue, NO->failed so return
+- (void)completed;	// subclasses to override, call super
+- (void)finish;		// subclasses to override for cleanup, call super
+
+- (void)failed;		// subclasses to override then finally call super
+
 @end
 
-@interface WebFetcher (ForSubClassesInternalUse)
-
-+ (BOOL)printDebugging;
-
-- (BOOL)connect;
-
-@end

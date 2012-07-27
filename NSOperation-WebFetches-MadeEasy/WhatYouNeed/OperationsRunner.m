@@ -47,7 +47,8 @@ static char *opContext = "opContext";
 	
 	__weak id <OperationsRunnerProtocol> delegate;
 }
-@synthesize anyThreadOK;
+@synthesize msgDelOn;
+@synthesize delegateThread;
 @synthesize noDebugMsgs;
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del
@@ -65,7 +66,7 @@ static char *opContext = "opContext";
 {
 	[self cancelOperations];
 	
-	NSLog(@"OPERATIONS RUNNER DEALLOC");
+	NSLog(@"Operations Runner Dealloc");
 }
 
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg
@@ -139,7 +140,20 @@ static char *opContext = "opContext";
 
 	// We either failed in setup or succeeded doing something.
 	
-	[delegate operationFinished:operation];
+	switch(msgDelOn) {
+	case msgDelOnMainThread:
+		{ dispatch_async(dispatch_get_main_queue(), ^{ [delegate operationFinished:operation]; } ); }
+		// or [(NSObject *)delegate performSelectorOnMainThread:@selector(operationFinished:) withObject:operation waitUntilDone:NO];
+		break;
+
+	case msgDelOnAnyThread:
+		[delegate operationFinished:operation];
+		break;
+	
+	case msgOnSpecificThread:
+		[(NSObject *)delegate performSelector:@selector(operationFinished:) onThread:delegateThread withObject:operation waitUntilDone:NO];
+		break;
+	}
 }
 
 // Done on the main thread
@@ -175,12 +189,7 @@ static char *opContext = "opContext";
 		//LOG(@"KVO: isFinished=%d %@ op=%@", op.isFinished, NSStringFromClass([self class]), NSStringFromClass([op class]));
 		if(op.isFinished == YES) {
 			// we get this on the operation's thread
-			// [self performSelectorOnMainThread:@selector(operationDidFinish:) withObject:op waitUntilDone:YES];
-			if(anyThreadOK) {
-				[self operationDidFinish:op];
-			} else {
-				dispatch_async(dispatch_get_main_queue(), ^{ [self operationDidFinish:op]; } );
-			}
+			[self performSelector:@selector(operationDidFinish:) onThread:delegateThread withObject:op waitUntilDone:NO];
 			//LOG(@"DONE!!!");
 		} else {
 			//LOG(@"NSOperation starting to RUN!!!");

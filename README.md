@@ -1,6 +1,10 @@
 NSOperation-WebFetches-MadeEasy
 ===============================
 
+UPDATES:
+  1.2 (7/26): New option for OperationsRunner to allows messaging with delegate on a specific thread
+  1.1 (7/12/12): broke WebFetcher into two classes, as the ConcurrentOperation class can more easily be re-used.
+
 INTRO
 
 This project is a simplified version of my Concurrent_NSOperations. That project fully explores just about everything you can do with Concurrent NSOperations, but because of this depth extracting just what you need to fetch data using asynchronous NSURLConnections is not all that clear.
@@ -9,7 +13,7 @@ Thus NSOperation-WebFetches-MadeEasy!
 
 Most of the complexity involved in managing a pool of concurrent NSOperations is moved to a helper class, OperationsRunner. By adding two methods to one of your classes, using a few of its methods, and implementing one protocol method, you can get all the benefits of background web fetches with just a small amount of effort.
 
-This project also supplies a NSOperation subclass, ConcurrentOp, that you can use as is or as a starting point.
+This project also supplies a NSOperation subclass, ConcurrentOperation, which deals with all the complexities of a concurrent NSOperation. One subclass of that is provided that is perfectly fine to use as is to download web content. You can also build on ConcurrentOperation to do other features like sequencers that need to run in their own thread.
 
 DEMO
 

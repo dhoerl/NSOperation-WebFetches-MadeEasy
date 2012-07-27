@@ -61,7 +61,7 @@
 {
 	[self cancelOperations];	// good idea but not required
 	
-	NSLog(@"Dealloc done!");
+	// NSLog(@"Dealloc done!");
 }
 
 - (void)viewDidLoad

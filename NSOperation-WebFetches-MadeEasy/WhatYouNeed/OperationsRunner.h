@@ -22,9 +22,12 @@
 //
 @protocol OperationsRunnerProtocol;
 
+typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgType;
+
 @interface OperationsRunner : NSObject
-@property (nonatomic, assign) BOOL anyThreadOK;	// do not need to be messaged on the main thread
-@property (nonatomic, assign) BOOL noDebugMsgs;	// suppress debug messages
+@property (nonatomic, assign) msgType msgDelOn;			// how to message delegate
+@property (nonatomic, weak) NSThread *delegateThread;	// how to message delegate
+@property (nonatomic, assign) BOOL noDebugMsgs;			// suppress debug messages
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del;
 
@@ -55,10 +58,15 @@ OperationsRunner *operationsRunner;
 {
 	[self cancelOperations];
 	
-	NSLog(@"Dealloc done!");
+	// NSLog(@"Dealloc done!");
 }
 
-// 5) Add this method to the implementation file
+// 5 Implement the delegate method:
+- (void)operationFinished:(NSOperation *)op
+{
+}
+
+// 6) Add this method to the implementation file
 - (id)forwardingTargetForSelector:(SEL)sel
 {
 	if(
@@ -78,8 +86,7 @@ OperationsRunner *operationsRunner;
 	}
 }
 
-// 6) Declare a category with these methods in the interface file (ie public) (change MyClass to your class)
-
+// 7) Declare a category with these methods in the interface file (ie public) (change MyClass to your class)
 @interface <myClass> (OperationsRunner)
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;
 

@@ -23,23 +23,13 @@
 
 #import "WebFetcher.h"
 
-#define kIsFinished					@"isFinished"	// NSOperations
-#define kIsExecuting				@"isExecuting"	// NSOperations
-
 // If you have some means to report progress
 #define PROGRESS_OFFSET 0.25f
 #define PROGRESS_UPDATE(x) ( ((x)*.75f)/(responseLength) + PROGRESS_OFFSET)
 
 @interface WebFetcher ()
-@property(atomic, assign) BOOL executing;
-@property(atomic, assign) BOOL finished;
-@property(nonatomic, strong) NSTimer *timer;
-@property(nonatomic, strong, readwrite) NSThread *thread;
-@property(nonatomic, strong) NSURLConnection *connection;
+@property(nonatomic, strong, readwrite) NSURLConnection *connection;
 @property(nonatomic, strong, readwrite) NSMutableData *webData;
-
-- (void)timer:(NSTimer *)t; // kch
-- (void)finish;
 
 @end
 
@@ -51,75 +41,28 @@
 @synthesize runMessage;
 @synthesize connection;
 @synthesize webData;
-@synthesize executing;
-@synthesize finished;
-@synthesize timer;
-@synthesize thread;
 @synthesize error;
 @synthesize errorMessage;
+@synthesize request;
+@synthesize htmlStatus;
 #ifndef NDEBUG
 @synthesize forceFailure;
 #endif
 
 + (BOOL)printDebugging { return NO; }			// set to yes for debugging
 
-- (BOOL)isExecuting { return executing; }
-- (BOOL)isFinished { return finished; }
-- (BOOL)isConcurrent { return YES; }
-
-- (void)start
+- (BOOL)setup
 {
-	BOOL isHostUDown =  NO; // if you have some means to detect the iNet is down ![appDelegate hostUp];
-	BOOL isCancelled = [self isCancelled];
-	if(isHostUDown || isCancelled) {
-		// NSLog(@"OPERATION CANCELLED: isCancelled=%d isHostUp=%d", isCancelled, isHostUDown);
-		if(isHostUDown) {
-			errorMessage = @"Internet Unreachable";
-		}
-		[self willChangeValueForKey:kIsFinished];
-		finished = YES;
-		[self didChangeValueForKey:kIsFinished];
-		return;
-	}
+	[super setup];
 
-	@autoreleasepool {
-		// do this first, to enable future messaging - 
-		thread	= [NSThread currentThread];	
-		// makes runloop functional
-		timer	= [NSTimer scheduledTimerWithTimeInterval:60*60 target:self selector:@selector(timer:) userInfo:nil repeats:NO];	
-		
-		[self willChangeValueForKey:kIsExecuting];
-		executing = YES;	// KVO
-		[self didChangeValueForKey:kIsExecuting];
-
-		NSURLRequest *request = [self setup];
-		BOOL allOK = [self connect:request];
-		
-		if(allOK) {
-			while(![self isFinished]) {
-#ifndef NDEBUG
-				BOOL ret = 
-#endif
-					[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-				assert(ret && "first assert");
-			}
-		} else {
-			[self finish];
-		}
-		[connection cancel];
-		[timer invalidate];
-	}
-}
-
-- (NSMutableURLRequest *)setup
-{
-	[thread setName:runMessage];	// debugging crashes
+	[self.thread setName:runMessage];	// debugging crashes
 
 	NSURL *url = [NSURL URLWithString:urlStr];
-	return [NSMutableURLRequest requestWithURL:url];
+	request =  [NSMutableURLRequest requestWithURL:url];
+	return request ? [self connect] : NO;
 }
 
-- (BOOL)connect:(NSURLRequest *)request
+- (BOOL)connect
 {
 #ifndef NDEBUG
 	if([[self class] printDebugging]) NSLog(@"URLSTRING1=%@", [request URL]);
@@ -139,23 +82,6 @@
 	}
 }
 
-- (void)finish
-{
-	[self willChangeValueForKey:kIsFinished];
-	[self willChangeValueForKey:kIsExecuting];
-
-    executing = NO;
-    finished = YES;
-
-    [self didChangeValueForKey:kIsExecuting];
-    [self didChangeValueForKey:kIsFinished];
-}
-
-- (void)timer:(NSTimer *)t
-{
-	// Keep Compiler Happy - this never gets called
-}
-
 - (void)completed // subclasses to override then finally call super
 {
 	// we need a tad delay to let the completed return before the KVO message kicks in
@@ -164,7 +90,7 @@
 
 - (void)failed // subclasses to override then finally call super
 {
-	[self finish];
+	[self performSelector:@selector(finish) onThread:self.thread withObject:nil waitUntilDone:NO];
 }
 
 - (void)dealloc
@@ -176,7 +102,7 @@
 
 @implementation WebFetcher (NSURLConnectionDelegate)
 
-- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)redirectResponse
+- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)req redirectResponse:(NSURLResponse *)redirectResponse
 {
 #ifndef NDEBUG
 	if([[self class] printDebugging]) NSLog(@"Connection:willSendRequest %@", request);
@@ -196,10 +122,15 @@
 		return;
 	}
 
+	// cast the response to NSHTTPURLResponse so we can look for 404 etc  
+	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response; 
+	htmlStatus = [httpResponse statusCode];	// if >= 400 might want to take special action
+
 	responseLength = response.expectedContentLength == NSURLResponseUnknownLength ? 1024 : (NSUInteger)response.expectedContentLength;
+
 #ifndef NDEBUG
 	if([[self class] printDebugging]) NSLog(@"Connection:didReceiveResponse: response=%@ len=%u", response, responseLength);
-	if(webData) NSLog(@"YIKES: already created a webData object!!! ?!?!?!?!?!??!?!?!??!?!?!?!?!?!??!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?");
+	if(webData) NSLog(@"YIKES: already created a webData object!");
 #endif
 	webData = [NSMutableData dataWithCapacity:responseLength];
 
