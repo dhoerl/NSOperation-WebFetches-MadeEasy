@@ -189,7 +189,7 @@ static char *opContext = "opContext";
 		//LOG(@"KVO: isFinished=%d %@ op=%@", op.isFinished, NSStringFromClass([self class]), NSStringFromClass([op class]));
 		if(op.isFinished == YES) {
 			// we get this on the operation's thread
-			[self performSelector:@selector(operationDidFinish:) onThread:delegateThread withObject:op waitUntilDone:NO];
+			[self operationDidFinish:op];
 			//LOG(@"DONE!!!");
 		} else {
 			//LOG(@"NSOperation starting to RUN!!!");
