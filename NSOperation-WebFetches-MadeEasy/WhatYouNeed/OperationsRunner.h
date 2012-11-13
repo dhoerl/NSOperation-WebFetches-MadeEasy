@@ -20,18 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+
 @protocol OperationsRunnerProtocol;
 
 typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgType;
 
 @interface OperationsRunner : NSObject
 @property (nonatomic, assign) msgType msgDelOn;			// how to message delegate
-@property (nonatomic, weak) NSThread *delegateThread;	// how to message delegate
+@property (nonatomic, assign) NSThread *delegateThread;	// how to message delegate
 @property (nonatomic, assign) BOOL noDebugMsgs;			// suppress debug messages
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del;
 
-- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;
+- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// all messages must be sent from the same thread
 
 - (NSSet *)operationsSet;
 - (NSUInteger)operationsCount;
@@ -43,37 +44,22 @@ typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgT
 
 #if 0 
 
-// 1) Add the header to the implementation file
-#import "OperationsRunner.h"
-
-
-// 2) Add the protocol to the class extension interface in the implementation
-@interface <myClass> () <OperationsRunnerProtocol>
-
-// 3) Add either a property or an ivar to the implementation file
+// 1) Add either a property or an ivar to the implementation file
 OperationsRunner *operationsRunner;
 
-// 4) Add a cancelOperations message to your dealloc (or add the dealloc below)
-- (void)dealloc
-{
-	[self cancelOperations];
-	
-	// NSLog(@"Dealloc done!");
-}
+// 2) Add the protocol to the class extension interface in the implementation
+@interface MyClass () <OperationsRunnerProtocol>
 
-// 5 Implement the delegate method:
-- (void)operationFinished:(NSOperation *)op
-{
-}
+// 3) Add the header to the implementation file
+#import "OperationsRunner.h"
 
-// 6) Add this method to the implementation file
+// 4) Add this method to the implementation file
 - (id)forwardingTargetForSelector:(SEL)sel
 {
 	if(
 		sel == @selector(runOperation:withMsg:)	|| 
 		sel == @selector(operationsSet)			|| 
 		sel == @selector(operationsCount)		||
-		sel == @selector(cancelOperations)		||
 		sel == @selector(enumerateOperations:)
 	) {
 		if(!operationsRunner) {
@@ -86,14 +72,14 @@ OperationsRunner *operationsRunner;
 	}
 }
 
-// 7) Declare a category with these methods in the interface file (ie public) (change MyClass to your class)
-@interface <myClass> (OperationsRunner)
+// 5) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
+
+@interface MyClass (OperationsRunner)
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;
 
 - (NSSet *)operationsSet;
 - (NSUInteger)operationsCount;
 
-- (void)cancelOperations;
 - (void)enumerateOperations:(void(^)(NSOperation *op))b;
 
 @end

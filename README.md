@@ -2,7 +2,10 @@ NSOperation-WebFetches-MadeEasy
 ===============================
 
 UPDATES:
-  1.2 (7/26): New option for OperationsRunner to allows messaging with delegate on a specific thread
+  1.3 (11/10/12) Made changes after discovering issues when this class is getting pressured:
+    - Insure that operationCount is precise regardless of how many simultaneous delegate messages are queued at once
+	- The 'cancelOperations' message must be sent to the object, to avoid actually creating an object in 'dealloc'
+  1.2 (7/26/12): New option for OperationsRunner to allows messaging with delegate on a specific thread
   1.1 (7/12/12): broke WebFetcher into two classes, as the ConcurrentOperation class can more easily be re-used.
 
 INTRO
@@ -41,7 +44,7 @@ Note that you don't even have to create the OperationsRunner - by using the NSOb
 
 Suppose you need to cancel all operations, perhaps due to the user tapping the "Back" button. Simply message your class with:
 
-    [myClass cancelOperations];
+    [operationsRunner cancelOperations]; // changed 11/10/12
 
 You don't even need to do this! If you have active operations, when your class' dealloc is called, the OperationsRunner is also dealloced, and it properly tears down active operations.
 

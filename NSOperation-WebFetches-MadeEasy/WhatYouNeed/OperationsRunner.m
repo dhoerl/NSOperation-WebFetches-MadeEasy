@@ -1,4 +1,3 @@
-
 // NSOperation-WebFetches-MadeEasy (TM)
 // Copyright (C) 2012 by David Hoerl
 // 
@@ -21,15 +20,12 @@
 // THE SOFTWARE.
 //
 
-#define LOG		NSLog
+#define LOG NSLog
 
 #import "OperationsRunner.h"
 
 #import "OperationsRunnerProtocol.h"
 #import "WebFetcher.h"
-
-#define kIsFinished		@"isFinished"	// NSOperations
-#define kIsExecuting	@"isExecuting"	// NSOperations
 
 static char *opContext = "opContext";
 
@@ -44,10 +40,9 @@ static char *opContext = "opContext";
 	NSOperationQueue *queue;
 	NSMutableSet *operations;
 	dispatch_queue_t operationsQueue;
-	
 	__weak id <OperationsRunnerProtocol> delegate;
 }
-@synthesize msgDelOn;
+@synthesize msgDelOn;	// default is msgDelOnMainThread
 @synthesize delegateThread;
 @synthesize noDebugMsgs;
 
@@ -57,7 +52,8 @@ static char *opContext = "opContext";
 		delegate	= del;
 		queue		= [NSOperationQueue new];
 		operations	= [NSMutableSet setWithCapacity:10];
-		operationsQueue = dispatch_queue_create("com.lot18.operationsQueue", DISPATCH_QUEUE_CONCURRENT);
+		operationsQueue = dispatch_queue_create("com.operationsRunner.operationsQueue", DISPATCH_QUEUE_SERIAL);
+		//[queue setMaxConcurrentOperationCount:THROTTLE_NUM];	// future feature
 	}
 	return self;
 }
@@ -66,7 +62,7 @@ static char *opContext = "opContext";
 {
 	[self cancelOperations];
 	
-	NSLog(@"Operations Runner Dealloc");
+	dispatch_release(operationsQueue);
 }
 
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg
@@ -79,9 +75,9 @@ static char *opContext = "opContext";
 	}
 #endif
 
-	[op addObserver:self forKeyPath:kIsFinished options:0 context:opContext];	// First, observe isFinished
-	dispatch_barrier_async(operationsQueue, ^
+	dispatch_async(operationsQueue, ^
 		{
+			[op addObserver:self forKeyPath:@"isFinished" options:0 context:opContext];	// First, observe isFinished
 			[operations addObject:op];	// Second we retain and save a reference to the operation
 		} );
 
@@ -91,11 +87,14 @@ static char *opContext = "opContext";
 -(void)cancelOperations
 {
 	//LOG(@"OP cancelOperations");
-
 	// if user waited for all data, the operation queue will be empty.
-	dispatch_barrier_sync(operationsQueue, ^
+	dispatch_sync(operationsQueue, ^
 		{
-			[operations enumerateObjectsUsingBlock:^(id obj, BOOL *stop) { [obj removeObserver:self forKeyPath:@"isFinished"]; }];   
+			//[operations enumerateObjectsUsingBlock:^(id obj, BOOL *stop) { [obj removeObserver:self forKeyPath:@"isFinished" context:opContext]; }];
+			[operations enumerateObjectsUsingBlock:^(NSOperation *op, BOOL *stop)
+				{
+					[op removeObserver:self forKeyPath:@"isFinished" context:opContext];
+				}];
 			[operations removeAllObjects];
 		} );
 
@@ -128,38 +127,46 @@ static char *opContext = "opContext";
         } );
 	if(!containsObject) return;
 	
-	// If we are in the queue, then we have to both remove our observation and queue membership
-	[operation removeObserver:self forKeyPath:@"isFinished"];
-	dispatch_barrier_async(operationsQueue, ^
-		{
-			[operations removeObject:operation];
-		} );
 	
 	// User cancelled
 	if(operation.isCancelled) return;
 
-	// We either failed in setup or succeeded doing something.
-	
+	//LOG(@"OP RUNNER GOT A MESSAGE %d for thread %@", msgDelOn, delegateThread);
+
 	switch(msgDelOn) {
 	case msgDelOnMainThread:
-		{ dispatch_async(dispatch_get_main_queue(), ^{ [delegate operationFinished:operation]; } ); }
-		// or [(NSObject *)delegate performSelectorOnMainThread:@selector(operationFinished:) withObject:operation waitUntilDone:NO];
+		//dispatch_async(dispatch_get_main_queue(), ^{ [delegate operationFinished:operation]; } );
+		[self performSelectorOnMainThread:@selector(_operationFinished:) withObject:operation waitUntilDone:NO];
 		break;
 
 	case msgDelOnAnyThread:
-		[delegate operationFinished:operation];
+		[self _operationFinished:operation];
 		break;
 	
 	case msgOnSpecificThread:
-		[(NSObject *)delegate performSelector:@selector(operationFinished:) onThread:delegateThread withObject:operation waitUntilDone:NO];
+		[self performSelector:@selector(_operationFinished:) onThread:delegateThread withObject:operation waitUntilDone:NO];
 		break;
 	}
 }
 
-// Done on the main thread
 - (void)operationFinished:(NSOperation *)op
 {
 	assert(!"Should never happen!");
+}
+
+- (void)_operationFinished:(NSOperation *)op
+{
+	dispatch_sync(operationsQueue, ^
+		{
+			// Need to see if while this sat in the designated thread, it was cancelled
+			BOOL notCancelled = [operations containsObject:op];
+			if(notCancelled) {
+				// If we are in the queue, then we have to remove our stuff, and in all cases make sure no KVO enabled
+				[op removeObserver:self forKeyPath:@"isFinished" context:opContext];
+				[operations removeObject:op];
+			}
+		} );
+	[delegate operationFinished:op];
 }
 
 - (NSSet *)operationsSet
