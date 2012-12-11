@@ -2,6 +2,7 @@ NSOperation-WebFetches-MadeEasy
 ===============================
 
 UPDATES:
+  1.4 (12/11/12) Added a note that the cancel message should be sent to the operations runner in dealloc()
   1.3 (11/10/12) Made changes after discovering issues when this class is getting pressured:
     - Insure that operationCount is precise regardless of how many simultaneous delegate messages are queued at once
 	- The 'cancelOperations' message must be sent to the object, to avoid actually creating an object in 'dealloc'

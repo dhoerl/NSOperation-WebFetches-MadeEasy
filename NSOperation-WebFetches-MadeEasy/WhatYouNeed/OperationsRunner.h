@@ -47,13 +47,13 @@ typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgT
 // 1) Add either a property or an ivar to the implementation file
 OperationsRunner *operationsRunner;
 
-// 2) Add the protocol to the class extension interface in the implementation
+// 2) Add the protocol to the class extension interface (often in the interface file)
 @interface MyClass () <OperationsRunnerProtocol>
 
 // 3) Add the header to the implementation file
 #import "OperationsRunner.h"
 
-// 4) Add this method to the implementation file
+// 4) Add this method to the implementation file (I put it at the bottom, could go into a category too)
 - (id)forwardingTargetForSelector:(SEL)sel
 {
 	if(
@@ -72,8 +72,13 @@ OperationsRunner *operationsRunner;
 	}
 }
 
-// 5) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
+// 5) Add the cancel to your dealloc (or the whole dealloc if you have none now)
+- (void)dealloc
+{
+	[operationsRunner cancel];
+}
 
+// 6) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
 @interface MyClass (OperationsRunner)
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;
 
