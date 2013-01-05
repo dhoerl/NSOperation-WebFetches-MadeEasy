@@ -29,40 +29,68 @@
 
 static char *opContext = "opContext";
 
-@interface OperationsRunner ()
-
-- (void)operationDidFinish:(NSOperation *)operation;
-
-@end
-
 @implementation OperationsRunner
 {
-	NSOperationQueue *queue;
-	NSMutableSet *operations;
-	dispatch_queue_t operationsQueue;
-	__weak id <OperationsRunnerProtocol> delegate;
+	NSOperationQueue						*queue;
+	NSMutableSet							*operations;
+	dispatch_queue_t						operationsQueue;
+	__weak id <OperationsRunnerProtocol>	delegate;
+	long									_priority;
 }
-@synthesize msgDelOn;	// default is msgDelOnMainThread
+@synthesize msgDelOn;						// default is msgDelOnMainThread
 @synthesize delegateThread;
 @synthesize noDebugMsgs;
+@dynamic priority;
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del
 {
     if((self = [super init])) {
 		delegate	= del;
 		queue		= [NSOperationQueue new];
+		
 		operations	= [NSMutableSet setWithCapacity:10];
-		operationsQueue = dispatch_queue_create("com.operationsRunner.operationsQueue", DISPATCH_QUEUE_SERIAL);
-		//[queue setMaxConcurrentOperationCount:THROTTLE_NUM];	// future feature
+		operationsQueue = dispatch_queue_create("com.lot18.operationsQueue", DISPATCH_QUEUE_SERIAL);
 	}
 	return self;
 }
-
 - (void)dealloc
 {
 	[self cancelOperations];
 	
 	dispatch_release(operationsQueue);
+}
+
+- (long)priority
+{
+	return _priority;
+}
+- (void)setPriority:(long)priority
+{
+	if(_priority != priority) {
+		// keep this around while in development
+		switch(priority) {
+		case DISPATCH_QUEUE_PRIORITY_HIGH:
+		case DISPATCH_QUEUE_PRIORITY_DEFAULT:
+		case DISPATCH_QUEUE_PRIORITY_LOW:
+		case DISPATCH_QUEUE_PRIORITY_BACKGROUND:
+			_priority = priority;
+			break;
+		default:
+			assert(!"Invalid Priority Value");
+			return;
+		}
+		
+		dispatch_set_target_queue(operationsQueue, dispatch_get_global_queue(_priority, 0));
+	}
+}
+
+- (NSUInteger)maxOps
+{
+	return queue.maxConcurrentOperationCount;
+}
+- (void)setMaxOps:(NSUInteger)maxOps
+{
+	queue.maxConcurrentOperationCount = maxOps;
 }
 
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg
@@ -79,16 +107,15 @@ static char *opContext = "opContext";
 		{
 			[op addObserver:self forKeyPath:@"isFinished" options:0 context:opContext];	// First, observe isFinished
 			[operations addObject:op];	// Second we retain and save a reference to the operation
+			[queue addOperation:op];	// Lastly, lets get going!
 		} );
-
-	[queue addOperation:op];	// Lastly, lets get going!
 }
 
 -(void)cancelOperations
 {
 	//LOG(@"OP cancelOperations");
 	// if user waited for all data, the operation queue will be empty.
-	dispatch_sync(operationsQueue, ^
+	dispatch_sync(operationsQueue, ^	// MUST BE SYNC
 		{
 			//[operations enumerateObjectsUsingBlock:^(id obj, BOOL *stop) { [obj removeObserver:self forKeyPath:@"isFinished" context:opContext]; }];
 			[operations enumerateObjectsUsingBlock:^(NSOperation *op, BOOL *stop)
@@ -127,7 +154,6 @@ static char *opContext = "opContext";
         } );
 	if(!containsObject) return;
 	
-	
 	// User cancelled
 	if(operation.isCancelled) return;
 
@@ -156,17 +182,23 @@ static char *opContext = "opContext";
 
 - (void)_operationFinished:(NSOperation *)op
 {
+	//LOG(@"_operationFinished: ENTER");
+	__block BOOL isCancelled = NO;
 	dispatch_sync(operationsQueue, ^
 		{
 			// Need to see if while this sat in the designated thread, it was cancelled
-			BOOL notCancelled = [operations containsObject:op];
-			if(notCancelled) {
+			isCancelled = ![operations containsObject:op];
+			if(!isCancelled) {
 				// If we are in the queue, then we have to remove our stuff, and in all cases make sure no KVO enabled
 				[op removeObserver:self forKeyPath:@"isFinished" context:opContext];
 				[operations removeObject:op];
 			}
 		} );
-	[delegate operationFinished:op];
+	
+	//LOG(@"_operationFinished: FINISH isCancelled=%d", isCancelled);
+	if(!isCancelled) {
+		[delegate operationFinished:op];
+	}
 }
 
 - (NSSet *)operationsSet
@@ -190,14 +222,13 @@ static char *opContext = "opContext";
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-	//LOT(@"observeValueForKeyPath %s %@", context, self);
+	//LOG(@"observeValueForKeyPath %s %@", context, self);
 	NSOperation *op = object;
 	if(context == opContext) {
 		//LOG(@"KVO: isFinished=%d %@ op=%@", op.isFinished, NSStringFromClass([self class]), NSStringFromClass([op class]));
 		if(op.isFinished == YES) {
 			// we get this on the operation's thread
 			[self operationDidFinish:op];
-			//LOG(@"DONE!!!");
 		} else {
 			//LOG(@"NSOperation starting to RUN!!!");
 		}

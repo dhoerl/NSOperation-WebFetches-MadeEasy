@@ -2,6 +2,10 @@ NSOperation-WebFetches-MadeEasy
 ===============================
 
 UPDATES:
+  1.5 ( 1/05/13) Bug fix and new features:
+    - 'cancelOperations' should have used 'dispatch_sync' instead of 'dispatch_async' - only discovered when using lots of operations on the background thread\
+    - can now set the maximum number of concurrent operations
+    - can now make the target queue managing the operations use any valid dispatch queue (useful to make the UI more responsive when queuing thousands of operations)
   1.4 (12/11/12) Added a note that the cancel message should be sent to the operations runner in dealloc()
   1.3 (11/10/12) Made changes after discovering issues when this class is getting pressured:
     - Insure that operationCount is precise regardless of how many simultaneous delegate messages are queued at once

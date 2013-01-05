@@ -92,7 +92,7 @@
 	[spinner startAnimating];
 
 	NSUInteger count = lrintf([operationCount value]);
-	operationsLeft.text = [NSString stringWithFormat:@"%ld", count];
+	operationsLeft.text = [NSString stringWithFormat:@"%d", count];
 	for(int i=0; i<count; ++i) {
 		NSString *msg = [NSString stringWithFormat:@"WebFetcher #%d", i];
 		WebFetcher *fetcher = [WebFetcher new];
@@ -135,7 +135,7 @@
 	
 - (void)operationFinished:(NSOperation *)op
 {
-	operationsLeft.text = [NSString stringWithFormat:@"%ld", [self operationsCount] ];
+	operationsLeft.text = [NSString stringWithFormat:@"%d", [self operationsCount] ];
 	
 	WebFetcher *fetcher = (WebFetcher *)op;
 	

@@ -29,6 +29,8 @@ typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgT
 @property (nonatomic, assign) msgType msgDelOn;			// how to message delegate
 @property (nonatomic, assign) NSThread *delegateThread;	// how to message delegate
 @property (nonatomic, assign) BOOL noDebugMsgs;			// suppress debug messages
+@property (nonatomic, assign) long priority;			// targets the internal GCD queue doleing out the operations
+@property (nonatomic, assign) NSUInteger maxOps;		// set the NSOperationQueue's maxConcurrentOperationCount
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del;
 
@@ -75,7 +77,7 @@ OperationsRunner *operationsRunner;
 // 5) Add the cancel to your dealloc (or the whole dealloc if you have none now)
 - (void)dealloc
 {
-	[operationsRunner cancel];
+	[operationsRunner cancelOperations];
 }
 
 // 6) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
