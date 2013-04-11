@@ -1,6 +1,6 @@
 
 // NSOperation-WebFetches-MadeEasy (TM)
-// Copyright (C) 2012 by David Hoerl
+// Copyright (C) 2012-2013 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -55,27 +55,27 @@
 		return;
 	}
 
-	@autoreleasepool {
-		// do this first, to enable future messaging - 
-		[self willChangeValueForKey:@"isExecuting"];
-		executing = YES;	// KVO
-		[self didChangeValueForKey:@"isExecuting"];
+	// Apple now says no autorelease pool (what use to be here)
 
-		BOOL allOK = [self setup];
+	// do this first, to enable future messaging - 
+	[self willChangeValueForKey:@"isExecuting"];
+	executing = YES;	// KVO
+	[self didChangeValueForKey:@"isExecuting"];
 
-		if(allOK) {
-			while(![self isFinished]) {
+	BOOL allOK = [self setup];
+
+	if(allOK) {
+		while(![self isFinished]) {
 #ifndef NDEBUG
-				BOOL ret = 
+			BOOL ret = 
 #endif
-					[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-				assert(ret && "first assert");
-			}
-		} else {
-			[self finish];
+				[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+			assert(ret && "first assert");
 		}
-		[self cleanup];
+	} else {
+		[self finish];
 	}
+	[self cleanup];
 }
 
 - (BOOL)setup

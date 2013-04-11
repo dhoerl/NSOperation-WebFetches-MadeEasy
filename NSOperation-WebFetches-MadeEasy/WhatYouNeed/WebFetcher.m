@@ -55,10 +55,10 @@
 {
 	[super setup];
 
-	[self.thread setName:runMessage];	// debugging crashes
-
 	NSURL *url = [NSURL URLWithString:urlStr];
 	request =  [NSMutableURLRequest requestWithURL:url];
+//[request setHTTPMethod:@"GET"];
+	
 	return request ? [self connect] : NO;
 }
 
@@ -102,10 +102,16 @@
 
 @implementation WebFetcher (NSURLConnectionDelegate)
 
-- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)req redirectResponse:(NSURLResponse *)redirectResponse
+- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)req redirectResponse:(NSHTTPURLResponse *)redirectResponse
 {
 #ifndef NDEBUG
-	if([[self class] printDebugging]) NSLog(@"Connection:willSendRequest %@", request);
+	if([[self class] printDebugging]) {
+		NSString *msg = @"";
+		if(redirectResponse) {
+			msg = [NSString stringWithFormat:@"redirectInfo: %@ %@", [NSHTTPURLResponse localizedStringForStatusCode:redirectResponse.statusCode], [redirectResponse allHeaderFields]];
+		}
+		NSLog(@"Connection:willSendRequest %@ redirectResponse: %@", request, msg);
+	}
 #endif
 
 	return request;

@@ -28,6 +28,9 @@
 #import "OperationsRunner.h"
 #import "OperationsRunnerProtocol.h"
 
+static NSUInteger lastOperationsCount;
+static NSUInteger lastMaxConcurrent;
+static NSUInteger lastPriority;
 
 @interface MyViewController () <OperationsRunnerProtocol>
 
@@ -43,10 +46,21 @@
 	IBOutlet UILabel *operationsToRun;
 	IBOutlet UILabel *operationsLeft;
 	IBOutlet UIActivityIndicatorView *spinner;
+	IBOutlet UISlider *maxConcurrent;
+	IBOutlet UILabel *maxConcurrentText;
+	IBOutlet UISegmentedControl *priority;
+	IBOutlet UILabel *elapsedTime;
 
 	// 1) Add either a property or an ivar to the implementation file
 	OperationsRunner *operationsRunner;
+	NSDate *startDate;
+}
 
++ (void)initialize
+{
+	lastOperationsCount	= 3;
+	lastMaxConcurrent	= 10;
+	lastPriority		= 1;
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -79,16 +93,27 @@
 	[self disable:NO control:fetch];
 	[spinner stopAnimating];
 
-	operationsToRun.text = [NSString stringWithFormat:@"%ld", lrintf([operationCount value]) ];
+	operationCount.value = lastOperationsCount;
+	operationsToRun.text = [NSString stringWithFormat:@"%u", lastOperationsCount];
 	operationsLeft.text = @"0";
+	
+	maxConcurrent.value = lastMaxConcurrent;
+	maxConcurrentText.text = [NSString stringWithFormat:@"%u", lastMaxConcurrent];
+	[self concurrentAction:maxConcurrent];
+
+	priority.selectedSegmentIndex = lastPriority;
+	[self priorityAction:priority];
 }
 
 - (IBAction)fetchAction:(id)sender
 {
+	startDate = [NSDate date];
+
 	[self disable:YES control:fetch];
 	[self disable:NO control:cancel];
 	[self disable:YES control:operationCount];
 	[self disable:YES control:fetch];
+		
 	[spinner startAnimating];
 
 	NSUInteger count = lrintf([operationCount value]);
@@ -96,11 +121,10 @@
 	for(int i=0; i<count; ++i) {
 		NSString *msg = [NSString stringWithFormat:@"WebFetcher #%d", i];
 		WebFetcher *fetcher = [WebFetcher new];
-		fetcher.urlStr = @"http://dl.dropbox.com/u/60414145/Shed.jpg";
+		fetcher.urlStr = @"http://dl.dropboxusercontent.com/u/60414145/Shed.jpg";
 		fetcher.runMessage = msg;
 		
 		[self runOperation:fetcher withMsg:msg];
-	
 	}
 }
 - (IBAction)cancelAction:(id)sender
@@ -119,7 +143,31 @@
 
 - (IBAction)operationsAction:(id)sender
 {
-	operationsToRun.text = [NSString stringWithFormat:@"%ld", lrintf([(UISlider *)sender value]) ];
+	lastOperationsCount = (NSUInteger)lrintf([(UISlider *)sender value]);
+	operationsToRun.text = [NSString stringWithFormat:@"%u", lastOperationsCount];
+}
+
+- (IBAction)concurrentAction:(id)sender
+{
+	lastMaxConcurrent = (NSUInteger)lrintf([(UISlider *)sender value]);
+	maxConcurrentText.text = [NSString stringWithFormat:@"%u", lastMaxConcurrent];
+	operationsRunner.maxOps = lastMaxConcurrent == 100 ? NSOperationQueueDefaultMaxConcurrentOperationCount : lastMaxConcurrent;
+}
+
+- (IBAction)priorityAction:(id)sender
+{
+	lastPriority = [(UISegmentedControl *)sender selectedSegmentIndex];
+	
+	long val;
+	switch(lastPriority) {
+	case 0:	val = DISPATCH_QUEUE_PRIORITY_HIGH;			break;
+	default:
+	case 1:	val = DISPATCH_QUEUE_PRIORITY_DEFAULT;		break;
+	case 2:	val = DISPATCH_QUEUE_PRIORITY_LOW;			break;
+	case 3:	val = DISPATCH_QUEUE_PRIORITY_BACKGROUND;	break;
+	}
+	operationsRunner.priority = val;
+	NSLog(@"priority=%ld", val);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -133,15 +181,17 @@
 	control.alpha	= disable ? 0.50f : 1.0f;
 }
 	
-- (void)operationFinished:(NSOperation *)op
+- (void)operationFinished:(NSOperation *)op count:(NSUInteger)remainingOps
 {
-	operationsLeft.text = [NSString stringWithFormat:@"%d", [self operationsCount] ];
+	operationsLeft.text = [NSString stringWithFormat:@"%d", (int)remainingOps ];
 	
 	WebFetcher *fetcher = (WebFetcher *)op;
 	
-	NSLog(@"Operation Completed: %@", fetcher.runMessage);
+	//NSLog(@"Operation %@: %@", (fetcher.webData && !fetcher.error) ? @"Completed" : @"FAILED", fetcher.runMessage);
+	NSLog(@"Operation %@: %@", fetcher.runMessage, [NSString stringWithFormat:@"ERROR=%@ size=%u", fetcher.error, [fetcher.webData length]]);
 	
-	if(![self operationsCount]) {
+	if(!remainingOps) {
+		elapsedTime.text = [NSString stringWithFormat:@"%.2f seconds", -[startDate timeIntervalSinceNow]];
 		[self defaultButtons];
 	}
 }
@@ -168,7 +218,9 @@
 
 - (void)viewDidUnload {
 	spinner = nil;
+	elapsedTime = nil;
 	[super viewDidUnload];
 }
+
 @end
 

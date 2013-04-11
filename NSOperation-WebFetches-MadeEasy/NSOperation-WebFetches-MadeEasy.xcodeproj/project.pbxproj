@@ -19,7 +19,7 @@
 		DE0D695F15A321A60040318C /* MyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = DE0D695D15A321A60040318C /* MyViewController.xib */; };
 		DE0D6C2915A707530040318C /* OperationsRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0D6C2615A707530040318C /* OperationsRunner.m */; };
 		DE0D6C2A15A707530040318C /* WebFetcher.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0D6C2815A707530040318C /* WebFetcher.m */; };
-		DE2519EF15AF70DD0073D58D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = DE2519EE15AF70DD0073D58D /* README.md */; };
+		DE2519EF15AF70DD0073D58D /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = DE2519EE15AF70DD0073D58D /* README.txt */; };
 		DE251A0915AF73940073D58D /* ConcurrentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DE251A0815AF73940073D58D /* ConcurrentOperation.m */; };
 /* End PBXBuildFile section */
 
@@ -45,7 +45,7 @@
 		DE0D6C2715A707530040318C /* WebFetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebFetcher.h; sourceTree = "<group>"; };
 		DE0D6C2815A707530040318C /* WebFetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebFetcher.m; sourceTree = "<group>"; };
 		DE0D6C2B15A707940040318C /* OperationsRunnerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OperationsRunnerProtocol.h; sourceTree = "<group>"; };
-		DE2519EE15AF70DD0073D58D /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		DE2519EE15AF70DD0073D58D /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.txt; path = ../README.txt; sourceTree = "<group>"; };
 		DE251A0715AF73940073D58D /* ConcurrentOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConcurrentOperation.h; sourceTree = "<group>"; };
 		DE251A0815AF73940073D58D /* ConcurrentOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConcurrentOperation.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -67,7 +67,7 @@
 		DE0D692F15A320DC0040318C = {
 			isa = PBXGroup;
 			children = (
-				DE2519EE15AF70DD0073D58D /* README.md */,
+				DE2519EE15AF70DD0073D58D /* README.txt */,
 				DE0D694415A320DC0040318C /* NSOperation-WebFetches-MadeEasy */,
 				DE0D693D15A320DC0040318C /* Frameworks */,
 				DE0D693B15A320DC0040318C /* Products */,
@@ -160,7 +160,7 @@
 		DE0D693115A320DC0040318C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = DE0D693415A320DC0040318C /* Build configuration list for PBXProject "NSOperation-WebFetches-MadeEasy" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -187,7 +187,7 @@
 				DE0D694915A320DC0040318C /* InfoPlist.strings in Resources */,
 				DE0D695515A320DC0040318C /* ViewController.xib in Resources */,
 				DE0D695F15A321A60040318C /* MyViewController.xib in Resources */,
-				DE2519EF15AF70DD0073D58D /* README.md in Resources */,
+				DE2519EF15AF70DD0073D58D /* README.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +236,10 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -261,6 +265,10 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;

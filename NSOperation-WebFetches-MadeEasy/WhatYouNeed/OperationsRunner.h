@@ -1,6 +1,6 @@
 
 // NSOperation-WebFetches-MadeEasy (TM)
-// Copyright (C) 2012 by David Hoerl
+// Copyright (C) 2012-2013 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,29 @@
 // THE SOFTWARE.
 //
 
+#import "OperationsRunnerProtocol.h"
+
 @protocol OperationsRunnerProtocol;
 
-typedef enum { msgDelOnMainThread, msgDelOnAnyThread, msgOnSpecificThread } msgType;
+typedef enum { msgDelOnMainThread=0, msgDelOnAnyThread, msgOnSpecificThread, msgOnSpecificQueue } msgType;
 
 @interface OperationsRunner : NSObject
-@property (nonatomic, assign) msgType msgDelOn;			// how to message delegate
-@property (nonatomic, assign) NSThread *delegateThread;	// how to message delegate
-@property (nonatomic, assign) BOOL noDebugMsgs;			// suppress debug messages
-@property (nonatomic, assign) long priority;			// targets the internal GCD queue doleing out the operations
-@property (nonatomic, assign) NSUInteger maxOps;		// set the NSOperationQueue's maxConcurrentOperationCount
+@property (nonatomic, assign) msgType msgDelOn;					// how to message delegate, defaults to MainThread
+@property (nonatomic, weak) NSThread *delegateThread;			// where to message delegate, sets msgDelOn->msgOnSpecificThread
+@property (nonatomic, assign) dispatch_queue_t delegateQueue;	// where to message delegate, sets msgDelOn->msgOnSpecificQueue
+@property (nonatomic, assign) BOOL noDebugMsgs;					// suppress debug messages
+@property (nonatomic, assign) long priority;					// targets the internal GCD queue doleing out the operations
+@property (nonatomic, assign) NSUInteger maxOps;				// set the NSOperationQueue's maxConcurrentOperationCount
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del;
 
-- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// all messages must be sent from the same thread
+- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// to submit an operation
 
-- (NSSet *)operationsSet;
-- (NSUInteger)operationsCount;
+- (NSSet *)operationsSet;		// for completeness, but really no reason to use this
+- (NSUInteger)operationsCount;	// uses dispatch_sync, so prefer to get the count in the delegate method
 
-- (void)cancelOperations;
-- (void)enumerateOperations:(void(^)(NSOperation *op)) b;
+- (void)cancelOperations;		// stop all work, will not get any more delegate calls after it returns
+- (void)enumerateOperations:(void(^)(NSOperation *op))b;	// in some very special cases you may need this (I did)
 
 @end
 
@@ -77,17 +80,17 @@ OperationsRunner *operationsRunner;
 // 5) Add the cancel to your dealloc (or the whole dealloc if you have none now)
 - (void)dealloc
 {
-	[operationsRunner cancelOperations];
+	[operationsRunner cancelOperations];	// you can send this at any time, for instance when the 'Back' button is tapped
 }
 
 // 6) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
 @interface MyClass (OperationsRunner)
-- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;
+- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// to submit an operation
 
-- (NSSet *)operationsSet;
-- (NSUInteger)operationsCount;
+- (NSSet *)operationsSet;		// for completeness, but really no reason to use this
+- (NSUInteger)operationsCount;	// uses dispatch_sync, so prefer to get the count in the delegate method
 
-- (void)enumerateOperations:(void(^)(NSOperation *op))b;
+- (void)enumerateOperations:(void(^)(NSOperation *op))b;	// in some very special cases you may need this (I did)
 
 @end
 
