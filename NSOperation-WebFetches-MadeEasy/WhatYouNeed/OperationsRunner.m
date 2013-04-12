@@ -28,15 +28,15 @@
 #import "WebFetcher.h"
 
 @interface OperationsRunner ()
-@property (nonatomic, assign) dispatch_queue_t operationsQueue;
-@property (atomic, assign) BOOL cancelled;
+@property (nonatomic, strong) NSOperationQueue	*queue;
+@property (nonatomic, strong) NSMutableSet		*operations;
+@property (nonatomic, assign) dispatch_queue_t	operationsQueue;
+@property (atomic, assign) BOOL					cancelled;
 
 @end
 
 @implementation OperationsRunner
 {
-	NSOperationQueue						*queue;
-	NSMutableSet							*operations;
 	__weak id <OperationsRunnerProtocol>	delegate;
 	long									_priority;
 }
@@ -46,9 +46,9 @@
 {
     if((self = [super init])) {
 		delegate	= del;
-		queue		= [NSOperationQueue new];
+		_queue		= [NSOperationQueue new];
 		
-		operations	= [NSMutableSet setWithCapacity:10];
+		_operations	= [NSMutableSet setWithCapacity:10];
 		_operationsQueue = dispatch_queue_create("com.dfh.operationsQueue", DISPATCH_QUEUE_SERIAL); //
 	}
 	return self;
@@ -101,19 +101,24 @@
 
 - (NSUInteger)maxOps
 {
-	return queue.maxConcurrentOperationCount;
+	return _queue.maxConcurrentOperationCount;
 }
 - (void)setMaxOps:(NSUInteger)maxOps
 {
-	queue.maxConcurrentOperationCount = maxOps;
+	_queue.maxConcurrentOperationCount = maxOps;
 }
 
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg
 {
-	__weak __typeof__(self) weakSelf = self;	// kch
+	self.cancelled = NO;
+
+	__weak __typeof__(self) weakSelf = self;
 	dispatch_async(_operationsQueue, ^
 		{
-			weakSelf.cancelled = NO;
+			// Programming With ARC Release Notes pg 10 - non-trivial weak cases
+			__typeof__(self) strongSelf = weakSelf;
+
+			if(!strongSelf || strongSelf.cancelled) return;
 #ifndef NDEBUG
 			if(!_noDebugMsgs) LOG(@"Run Operation: %@", msg);
 			if([op isKindOfClass:[WebFetcher class]]) {
@@ -121,23 +126,21 @@
 				fetcher.runMessage = msg;
 			}
 #endif
+			__weak __typeof__(self) weakSelf2 = strongSelf;	// kch
 			__weak __typeof__(op) weakOp = op;	// kch
 			[op setCompletionBlock:^
 				{
-					dispatch_async(weakSelf.operationsQueue, ^
-						{
-							[weakSelf _operationFinished:weakOp];
-						} );
+					__typeof__(self) strongSelf2 = weakSelf2;
+					if(strongSelf2) {
+						dispatch_async(strongSelf2.operationsQueue, ^
+							{
+								[strongSelf2 _operationFinished:weakOp];
+							} );
+					}
 				} ];
 				
-			[operations addObject:op];	// Second we retain and save a reference to the operation
-			[queue addOperation:op];	// Lastly, lets get going!
-#if 0
-			if([op isKindOfClass:[WebFetcher class]]) {
-				WebFetcher *fetcher = (WebFetcher *)op;
-				NSLog(@"DONE ADDING %@", fetcher.runMessage);
-			}
-#endif
+			[strongSelf.operations addObject:op];	// Second we retain and save a reference to the operation
+			[strongSelf.queue addOperation:op];	// Lastly, lets get going!
 		} );
 }
 
@@ -149,11 +152,11 @@
 
 	dispatch_sync(_operationsQueue, ^	// MUST BE SYNC
 		{
-			[operations removeAllObjects];
+			[self.operations removeAllObjects];
 		} );
 
-	[queue cancelAllOperations];
-	[queue waitUntilAllOperationsAreFinished];
+	[_queue cancelAllOperations];
+	[_queue waitUntilAllOperationsAreFinished];
 }
 
 - (void)enumerateOperations:(void(^)(NSOperation *op))b
@@ -161,7 +164,7 @@
 	//LOG(@"OP enumerateOperations");
 	dispatch_sync(_operationsQueue, ^
 		{
-			[operations enumerateObjectsUsingBlock:^(NSOperation *operation, BOOL *stop)
+			[self.operations enumerateObjectsUsingBlock:^(NSOperation *operation, BOOL *stop)
 				{
 					b(operation);
 				}];   
@@ -173,7 +176,7 @@
 	__block NSSet *set;
 	dispatch_sync(_operationsQueue, ^
 		{
-            set = [NSSet setWithSet:operations];
+            set = [NSSet setWithSet:self.operations];
         } );
 	return set;
 }
@@ -183,22 +186,15 @@
 	__block NSUInteger count;
 	dispatch_sync(_operationsQueue, ^
 		{
-            count = [operations count];
+            count = [_operations count];
         } );
 	return count;
 }
 
 - (void)_operationFinished:(NSOperation *)op	// excutes in operationsQueue
 {
-#ifndef NDEBUG
-	if([op isKindOfClass:[WebFetcher class]]) {
-		WebFetcher *fetcher = (WebFetcher *)op;
-		NSLog(@"_opFinish: %@", fetcher.runMessage);
-	}
-#endif
-
-	if([operations containsObject:op]) {
-		[operations removeObject:op];
+	if([_operations containsObject:op]) {
+		[_operations removeObject:op];
 
 		// if you cancel the operation when its in the set, will hit this case
 		if(op.isCancelled || self.cancelled) {
@@ -212,7 +208,7 @@
 
 	//LOG(@"OP RUNNER GOT A MESSAGE %d for thread %@", _msgDelOn, delegateThread);
 
-	NSUInteger count = [operations count];
+	NSUInteger count = [_operations count];
 	NSDictionary *dict = @{ @"op" : op, @"count" : @(count) };
 
 	switch(_msgDelOn) {
