@@ -110,10 +110,10 @@
 
 - (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg
 {
-	self.cancelled = NO;
-
+	__weak __typeof__(self) weakSelf = self;	// kch
 	dispatch_async(_operationsQueue, ^
 		{
+			weakSelf.cancelled = NO;
 #ifndef NDEBUG
 			if(!_noDebugMsgs) LOG(@"Run Operation: %@", msg);
 			if([op isKindOfClass:[WebFetcher class]]) {
@@ -121,7 +121,6 @@
 				fetcher.runMessage = msg;
 			}
 #endif
-			__weak __typeof__(self) weakSelf = self;	// kch
 			__weak __typeof__(op) weakOp = op;	// kch
 			[op setCompletionBlock:^
 				{
