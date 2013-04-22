@@ -1,15 +1,16 @@
 
 NSOperation-WebFetches-MadeEasy
-===============================
-===============================
 
-Version 3 of this project switched to plain ole NSOperation's (not concurrent), and at this point it seems senseless to use the overhead of the NSOperation system. Thus, this project has been converted to use GCD and blocks solely, and as there are no long NSOperations the project title is incorrect.
-
-Thus, this project is now deprecated, see FastEasyConcurrentFetches for the GCD code.
 
 ===============================
 ===============================
 
+Version 3 of this project switched to plain ole NSOperation's (not concurrent), and at this point it seems senseless to use the overhead of the NSOperation framework. Thus, this project has been converted to use GCD and blocks solely, and as there are no long NSOperations to be found the project title is incorrect.
+
+This project is now deprecated, see FastEasyConcurrentFetches for the GCD code.
+
+===============================
+===============================
 
 
 OperationsRunner does the heavy lifting
