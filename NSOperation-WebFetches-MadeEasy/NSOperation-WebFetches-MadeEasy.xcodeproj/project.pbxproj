@@ -21,6 +21,10 @@
 		DE0D6C2A15A707530040318C /* WebFetcher.m in Sources */ = {isa = PBXBuildFile; fileRef = DE0D6C2815A707530040318C /* WebFetcher.m */; };
 		DE2519EF15AF70DD0073D58D /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = DE2519EE15AF70DD0073D58D /* README.txt */; };
 		DE251A0915AF73940073D58D /* ConcurrentOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = DE251A0815AF73940073D58D /* ConcurrentOperation.m */; };
+		DEE915FB172570090085F570 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEE915F8172570090085F570 /* Default-568h@2x.png */; };
+		DEE915FC172570090085F570 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = DEE915F9172570090085F570 /* Default.png */; };
+		DEE915FD172570090085F570 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEE915FA172570090085F570 /* Default@2x.png */; };
+		DEE91600172570190085F570 /* URfetcher.m in Sources */ = {isa = PBXBuildFile; fileRef = DEE915FF172570190085F570 /* URfetcher.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +52,11 @@
 		DE2519EE15AF70DD0073D58D /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.txt; path = ../README.txt; sourceTree = "<group>"; };
 		DE251A0715AF73940073D58D /* ConcurrentOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConcurrentOperation.h; sourceTree = "<group>"; };
 		DE251A0815AF73940073D58D /* ConcurrentOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConcurrentOperation.m; sourceTree = "<group>"; };
+		DEE915F8172570090085F570 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		DEE915F9172570090085F570 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		DEE915FA172570090085F570 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		DEE915FE172570190085F570 /* URfetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = URfetcher.h; sourceTree = "<group>"; };
+		DEE915FF172570190085F570 /* URfetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = URfetcher.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,9 +121,12 @@
 		DE0D694515A320DC0040318C /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				DE0D694615A320DC0040318C /* NSOperation-WebFetches-MadeEasy-Info.plist */,
+				DEE915F8172570090085F570 /* Default-568h@2x.png */,
+				DEE915F9172570090085F570 /* Default.png */,
+				DEE915FA172570090085F570 /* Default@2x.png */,
 				DE0D694715A320DC0040318C /* InfoPlist.strings */,
 				DE0D694A15A320DC0040318C /* main.m */,
+				DE0D694615A320DC0040318C /* NSOperation-WebFetches-MadeEasy-Info.plist */,
 				DE0D694C15A320DC0040318C /* NSOperation-WebFetches-MadeEasy-Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -128,6 +140,8 @@
 				DE0D6C2B15A707940040318C /* OperationsRunnerProtocol.h */,
 				DE0D6C2515A707530040318C /* OperationsRunner.h */,
 				DE0D6C2615A707530040318C /* OperationsRunner.m */,
+				DEE915FE172570190085F570 /* URfetcher.h */,
+				DEE915FF172570190085F570 /* URfetcher.m */,
 				DE0D6C2715A707530040318C /* WebFetcher.h */,
 				DE0D6C2815A707530040318C /* WebFetcher.m */,
 			);
@@ -188,6 +202,9 @@
 				DE0D695515A320DC0040318C /* ViewController.xib in Resources */,
 				DE0D695F15A321A60040318C /* MyViewController.xib in Resources */,
 				DE2519EF15AF70DD0073D58D /* README.txt in Resources */,
+				DEE915FB172570090085F570 /* Default-568h@2x.png in Resources */,
+				DEE915FC172570090085F570 /* Default.png in Resources */,
+				DEE915FD172570090085F570 /* Default@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +222,7 @@
 				DE0D6C2915A707530040318C /* OperationsRunner.m in Sources */,
 				DE0D6C2A15A707530040318C /* WebFetcher.m in Sources */,
 				DE251A0915AF73940073D58D /* ConcurrentOperation.m in Sources */,
+				DEE91600172570190085F570 /* URfetcher.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

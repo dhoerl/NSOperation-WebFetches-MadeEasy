@@ -1,5 +1,5 @@
 
-// NSOperation-WebFetches-MadeEasy (TM)
+// FastEasyConcurrentWebFetches (TM)
 // Copyright (C) 2012 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,13 +23,14 @@
 
 @interface ConcurrentOperation : NSOperation
 @property (nonatomic, strong, readonly) NSThread *thread;	// maybe you want to message it
+@property (nonatomic, copy) NSString *runMessage;			// debugging
 
 @end
 
 // These are here for subclassers and not intended for general use
 @interface ConcurrentOperation (ForSubClassesInternalUse)
 
-- (BOOL)setup;		// get the app started, YES->continue, NO->failed so return
+- (id)setup;		// get the app started, YES->continue, NO->failed so return
 - (void)completed;	// subclasses to override, call super
 - (void)finish;		// subclasses to override for cleanup, call super
 

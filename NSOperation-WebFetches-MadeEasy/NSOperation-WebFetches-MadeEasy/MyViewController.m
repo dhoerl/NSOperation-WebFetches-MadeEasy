@@ -1,5 +1,5 @@
 
-// NSOperation-WebFetches-MadeEasy (TM)
+// FastEasyConcurrentWebFetches (TM)
 // Copyright (C) 2012 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +23,7 @@
 
 #import "MyViewController.h"
 
-#import "WebFetcher.h"
+#import "URfetcher.h"
 // 3) Add the header to the implementation file
 #import "OperationsRunner.h"
 #import "OperationsRunnerProtocol.h"
@@ -96,12 +96,14 @@ static NSUInteger lastPriority;
 	operationCount.value = lastOperationsCount;
 	operationsToRun.text = [NSString stringWithFormat:@"%u", lastOperationsCount];
 	operationsLeft.text = @"0";
-	
+
 	maxConcurrent.value = lastMaxConcurrent;
 	maxConcurrentText.text = [NSString stringWithFormat:@"%u", lastMaxConcurrent];
-	[self concurrentAction:maxConcurrent];
 
 	priority.selectedSegmentIndex = lastPriority;
+	
+	[self operationsAction:operationCount];
+	[self concurrentAction:maxConcurrent];
 	[self priorityAction:priority];
 }
 
@@ -119,8 +121,8 @@ static NSUInteger lastPriority;
 	NSUInteger count = lrintf([operationCount value]);
 	operationsLeft.text = [NSString stringWithFormat:@"%d", count];
 	for(int i=0; i<count; ++i) {
-		NSString *msg = [NSString stringWithFormat:@"WebFetcher #%d", i];
-		WebFetcher *fetcher = [WebFetcher new];
+		NSString *msg = [NSString stringWithFormat:@"URfetcher #%d", i];
+		URfetcher *fetcher = [URfetcher new];
 		fetcher.urlStr = @"http://dl.dropboxusercontent.com/u/60414145/Shed.jpg";
 		fetcher.runMessage = msg;
 		
@@ -185,7 +187,7 @@ static NSUInteger lastPriority;
 {
 	operationsLeft.text = [NSString stringWithFormat:@"%d", (int)remainingOps ];
 	
-	WebFetcher *fetcher = (WebFetcher *)op;
+	URfetcher *fetcher = (URfetcher *)op;
 	
 	//NSLog(@"Operation %@: %@", (fetcher.webData && !fetcher.error) ? @"Completed" : @"FAILED", fetcher.runMessage);
 	NSLog(@"Operation %@: %@", fetcher.runMessage, [NSString stringWithFormat:@"ERROR=%@ size=%u", fetcher.error, [fetcher.webData length]]);
@@ -201,9 +203,8 @@ static NSUInteger lastPriority;
 {
 	if(
 		sel == @selector(runOperation:withMsg:)	|| 
-		sel == @selector(operationsSet)			|| 
+		sel == @selector(runOperations:)		||
 		sel == @selector(operationsCount)		||
-		sel == @selector(cancelOperations)		||
 		sel == @selector(enumerateOperations:)
 	) {
 		if(!operationsRunner) {

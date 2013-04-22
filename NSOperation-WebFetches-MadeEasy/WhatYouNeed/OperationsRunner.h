@@ -1,5 +1,5 @@
 
-// NSOperation-WebFetches-MadeEasy (TM)
+// FastEasyConcurrentWebFetches (TM)
 // Copyright (C) 2012-2013 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +24,7 @@
 #import "OperationsRunnerProtocol.h"
 
 @protocol OperationsRunnerProtocol;
+@class ConcurrentOperation;
 
 typedef enum { msgDelOnMainThread=0, msgDelOnAnyThread, msgOnSpecificThread, msgOnSpecificQueue } msgType;
 
@@ -37,13 +38,12 @@ typedef enum { msgDelOnMainThread=0, msgDelOnAnyThread, msgOnSpecificThread, msg
 
 - (id)initWithDelegate:(id <OperationsRunnerProtocol>)del;
 
-- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// to submit an operation
+- (void)runOperation:(ConcurrentOperation *)op withMsg:(NSString *)msg;	// to submit an operation
 
-- (NSSet *)operationsSet;		// for completeness, but really no reason to use this
-- (NSUInteger)operationsCount;	// uses dispatch_sync, so prefer to get the count in the delegate method
+- (NSUInteger)operationsCount;	// now returns immediately
 
 - (void)cancelOperations;		// stop all work, will not get any more delegate calls after it returns
-- (void)enumerateOperations:(void(^)(NSOperation *op))b;	// in some very special cases you may need this (I did)
+- (void)enumerateOperations:(void(^)(ConcurrentOperation *op))b;	// in some very special cases you may need this (I did)
 
 @end
 
@@ -63,7 +63,7 @@ OperationsRunner *operationsRunner;
 {
 	if(
 		sel == @selector(runOperation:withMsg:)	|| 
-		sel == @selector(operationsSet)			|| 
+		sel == @selector(runOperations:)		||
 		sel == @selector(operationsCount)		||
 		sel == @selector(enumerateOperations:)
 	) {
@@ -85,12 +85,13 @@ OperationsRunner *operationsRunner;
 
 // 6) Declare a category with these methods in the interface or implementation file (change MyClass to your class)
 @interface MyClass (OperationsRunner)
-- (void)runOperation:(NSOperation *)op withMsg:(NSString *)msg;	// to submit an operation
 
-- (NSSet *)operationsSet;		// for completeness, but really no reason to use this
+- (void)runOperation:(ConcurrentOperation *)op withMsg:(NSString *)msg;	// to submit an operation
+- (BOOL)runOperations:(NSSet *)operations;	// Set of ConcurrentOperation objects with their runMessage set (or not)
+
 - (NSUInteger)operationsCount;	// uses dispatch_sync, so prefer to get the count in the delegate method
 
-- (void)enumerateOperations:(void(^)(NSOperation *op))b;	// in some very special cases you may need this (I did)
+- (void)enumerateOperations:(void(^)(ConcurrentOperation *op))b;	// in some very special cases you may need this (I did)
 
 @end
 

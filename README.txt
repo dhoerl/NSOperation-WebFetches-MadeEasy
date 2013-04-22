@@ -1,5 +1,16 @@
 
 NSOperation-WebFetches-MadeEasy
+===============================
+===============================
+
+Version 3 of this project switched to plain ole NSOperation's (not concurrent), and at this point it seems senseless to use the overhead of the NSOperation system. Thus, this project has been converted to use GCD and blocks solely, and as there are no long NSOperations the project title is incorrect.
+
+Thus, this project is now deprecated, see FastEasyConcurrentFetches for the GCD code.
+
+===============================
+===============================
+
+
 
 OperationsRunner does the heavy lifting
 ===============================
@@ -10,6 +21,10 @@ The demo app offers a few controls so that you can see for yourself that running
 
 
 UPDATES:
+
+  3.0 (04/20/13) Major Change
+    - Apple documentation on Concurrent NSOperations has changed over the years, and now it does not recommend using a Concurrent operation for what this project does. Thus, NSOperation-WebFetches-MadeEasy was converted to use "plain-ole" NSOperations, which simplified the code even more.
+    - Use 'setThreadPriority:', available within each Operation, to modify the NSThread's priority to reflect what is set in OperationsRunner.	
 
   2.0 (04/11/13) Improvements
     - switched from using keyValue observing of "isFinished" to the newer NSOperation's completionBlock, which simplified the code and reduced its size

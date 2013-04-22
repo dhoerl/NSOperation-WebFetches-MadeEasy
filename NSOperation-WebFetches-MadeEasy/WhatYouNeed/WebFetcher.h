@@ -1,6 +1,6 @@
 
-// NSOperation-WebFetches-MadeEasy (TM)
-// Copyright (C) 2012 by David Hoerl
+// FastEasyConcurrentWebFetches (TM)
+// Copyright (C) 2012-2013 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,26 +27,22 @@ typedef NSRange (*htmlProcessor)(NSData *arg, const char *classMatch);
 
 @interface WebFetcher : ConcurrentOperation
 @property (nonatomic, copy) NSString *urlStr;
+@property (nonatomic, strong, readonly) NSMutableData *webData;
 @property (nonatomic, strong) NSError *error;
 @property (nonatomic, copy) NSString *errorMessage;
-@property (nonatomic, copy) NSString *runMessage;	// debugging
-@property (nonatomic, strong, readonly) NSURLConnection *connection;
-@property (nonatomic, strong, readonly) NSMutableData *webData;
-@property (nonatomic, strong) NSMutableURLRequest *request;	// superclass might want to fiddle with it
 @property (nonatomic, assign) NSUInteger htmlStatus;
-#ifndef NDEBUG
-@property (nonatomic, assign) BOOL forceFailure;	// testing
+#if defined(UNIT_TESTING)
+@property (nonatomic, assign) forceMode force;
 #endif
+
++ (BOOL)printDebugging;
++ (BOOL)persistentConnection;
++ (NSUInteger)timeout;
+
+- (NSMutableURLRequest *)setup;
+- (BOOL)connect:(NSURLRequest *)request;
 
 @end
 
 @interface WebFetcher (NSURLConnectionDelegate) <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-@end
-
-@interface WebFetcher (ForSubClassesInternalUse)
-
-+ (BOOL)printDebugging;
-
-- (BOOL)connect;
-
 @end

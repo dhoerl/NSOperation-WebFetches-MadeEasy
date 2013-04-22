@@ -1,7 +1,9 @@
+
 //
-// FastEasyConcurrentWebFetches (TM)
-// Copyright (C) 2012-2013 by David Hoerl
-//
+// URfetcher.m
+// FastEasyConcurrentWebFetches
+// Copyright (C) 2013 by David Hoerl
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -21,9 +23,31 @@
 // THE SOFTWARE.
 //
 
-@protocol OperationsRunnerProtocol <NSObject>
+#import "URfetcher.h"
 
-// can get this on main thread (default), a specific thread you request, or anyThread
-- (void)operationFinished:(NSOperation *)op count:(NSUInteger)remainingOps;
+@implementation URfetcher
+
++ (BOOL)persistentConnection { return NO; }
++ (NSUInteger)timeout { return 60; }
++ (BOOL)printDebugging { return NO; }
+
+- (NSURLRequest *)setup
+{
+	NSMutableURLRequest *request = [super setup];
+
+#if defined(UNIT_TESTING)
+	// Unit Testing
+	switch(self.force) {
+	case forceFailure:
+	case forceSuccess:
+		return request;
+	default:
+		break;
+	}
+#endif
+	
+	BOOL allOK = [self connect:request];
+	return allOK ? request : nil;
+}
 
 @end

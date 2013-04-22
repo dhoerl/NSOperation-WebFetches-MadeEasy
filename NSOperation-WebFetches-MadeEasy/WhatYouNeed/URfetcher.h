@@ -1,7 +1,9 @@
+
 //
-// FastEasyConcurrentWebFetches (TM)
-// Copyright (C) 2012-2013 by David Hoerl
-//
+// URfetcher.h
+// FastEasyConcurrentWebFetches
+// Copyright (C) 2013 by David Hoerl
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -21,9 +23,8 @@
 // THE SOFTWARE.
 //
 
-@protocol OperationsRunnerProtocol <NSObject>
+#import "WebFetcher.h"
 
-// can get this on main thread (default), a specific thread you request, or anyThread
-- (void)operationFinished:(NSOperation *)op count:(NSUInteger)remainingOps;
+@interface URfetcher : WebFetcher
 
 @end

@@ -1,6 +1,6 @@
 
-// NSOperation-WebFetches-MadeEasy (TM)
-// Copyright (C) 2012-2013 by David Hoerl
+// FastEasyConcurrentWebFetches (TM)
+// Copyright (C) 2012 by David Hoerl
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,69 +23,63 @@
 
 #import "ConcurrentOperation.h"
 
+@interface ConcurrentOperation (DoesNotExist)
+
+- (void)timer:(NSTimer *)t; // keeps the compiler happy
+
+@end
+
 @interface ConcurrentOperation ()
-@property(atomic, assign) BOOL executing;
-@property(atomic, assign) BOOL finished;
 @property(nonatomic, strong) NSTimer *timer;
 @property(nonatomic, strong, readwrite) NSThread *thread;
-
-- (void)timer:(NSTimer *)t; // kch
-- (void)finish;
+@property(atomic, assign) BOOL done;
 
 @end
 
 @implementation ConcurrentOperation
-@synthesize executing;
-@synthesize finished;
 @synthesize timer;
 @synthesize thread;
 
-- (BOOL)isExecuting { return executing; }
-- (BOOL)isFinished { return finished; }
-- (BOOL)isConcurrent { return YES; }
+- (void)setThreadPriority:(double)priority
+{
+	if(![self isFinished]) {
+		[super setThreadPriority:priority];
+	}
+}
 
-- (void)start
+- (void)main
 {
 	BOOL isCancelled = [self isCancelled];
 	if(isCancelled) {
 		// NSLog(@"OPERATION CANCELLED: isCancelled=%d isHostUp=%d", isCancelled, isHostUDown);
-		[self willChangeValueForKey:@"isFinished"];
-		finished = YES;
-		[self didChangeValueForKey:@"isFinished"];
 		return;
 	}
 
-	// Apple now says no autorelease pool (what use to be here)
-
-	// do this first, to enable future messaging - 
-	[self willChangeValueForKey:@"isExecuting"];
-	executing = YES;	// KVO
-	[self didChangeValueForKey:@"isExecuting"];
-
-	BOOL allOK = [self setup];
+	BOOL allOK = [self setup] ? YES : NO;
 
 	if(allOK) {
-		while(![self isFinished]) {
+		while(!self.done) {
 #ifndef NDEBUG
 			BOOL ret = 
 #endif
 				[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
 			assert(ret && "first assert");
 		}
+		//NSLog(@"DONE=%d", self.done);
 	} else {
 		[self finish];
 	}
 	[self cleanup];
 }
 
-- (BOOL)setup
+- (id)setup
 {
 	thread	= [NSThread currentThread];	
 
 	// makes runloop functional
 	timer	= [NSTimer scheduledTimerWithTimeInterval:60*60 target:self selector:@selector(timer:) userInfo:nil repeats:NO];	
 
-	return YES;
+	return @"";
 }
 
 - (void)cleanup
@@ -104,32 +98,19 @@
 	}
 }
 
-- (void)finish
-{
-	[self willChangeValueForKey:@"isFinished"];
-	[self willChangeValueForKey:@"isExecuting"];
-
-    executing = NO;
-    finished = YES;
-
-    [self didChangeValueForKey:@"isFinished"];
-    [self didChangeValueForKey:@"isExecuting"];
-}
-
-- (void)timer:(NSTimer *)t
-{
-	// Keep Compiler Happy - this never gets called
-}
-
 - (void)completed // subclasses to override then finally call super
 {
-	// we need a tad delay to let the completed return before the KVO message kicks in
 	[self performSelector:@selector(finish) onThread:self.thread withObject:nil waitUntilDone:NO];
 }
 
 - (void)failed // subclasses to override then finally call super
 {
-	[self finish];
+	[self performSelector:@selector(finish) onThread:self.thread withObject:nil waitUntilDone:NO];
+}
+
+- (void)finish // subclasses to override then finally call super, for cleanup
+{
+	self.done = YES;
 }
 
 - (void)dealloc
